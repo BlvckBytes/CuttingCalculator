@@ -1,4 +1,5 @@
 import sys
+from parts_list import get_current_pices
 
 accepted_supplier_lengths = [500, 1000, 1500, 2000]
 cut_width = 3 # ~2.5mm blade width + .5mm tolerance
@@ -6,20 +7,16 @@ cut_width = 3 # ~2.5mm blade width + .5mm tolerance
 # tuple[supplier_length, waste, list[pice]]
 Scenario = tuple[int, int, list[int]]
 
-required_pices = [
-  510, 510, 510, 510,
-  300, 300, 300, 300,
-  220, 220
-]
+required_pices = get_current_pices()
 
 def round_to_nearest_supplier_length(input: int) -> int | None:
   if input <= 0:
     return None
-  
+
   for accepted_supplier_length in accepted_supplier_lengths:
     if input < accepted_supplier_length:
       return accepted_supplier_length
-    
+
   return None
 
 def append_scenario(pices: list[int], collection: list[Scenario]):
@@ -35,48 +32,65 @@ def append_scenario(pices: list[int], collection: list[Scenario]):
   scenario = (supplier_length, waste, pices.copy())
   collection.append(scenario)
 
+def calculate_score(scenario: Scenario) -> float:
+  '''
+  (length=1500, waste=31, pices=[220, 220, 510, 510])
+  (length=2000, waste=228, pices=[220, 220, 510, 510, 300])
+
+  TODO: Think about a way to give preference to groups with more members, to also
+  lessen the supplier cut count, as this change does not add waste, but reduces costs
+  '''
+
+  # The lesser the waste, the better the score
+  max_length = max(accepted_supplier_lengths)
+  scenario_waste = scenario[1]
+  waste_score = max_length - scenario_waste
+
+  return waste_score
+
 def choose_best_scenario(collection: list[Scenario]) -> Scenario | None:
-  least_waste = None
-  least_waste_id = None
+  max_score = None
+  max_score_id = None
 
   for i in range(0, len(collection)):
-    current_waste = collection[i][1]
+    current_score = calculate_score(collection[i])
 
-    if least_waste is None or least_waste > current_waste:
-      least_waste = current_waste
-      least_waste_id = i
+    if max_score is None or max_score < current_score:
+      max_score = current_score
+      max_score_id = i
 
-  if least_waste_id is None:
+  if max_score_id is None:
     return None
 
-  return collection[least_waste_id]
+  return collection[max_score_id]
+
+def generate_scenarios(pices: list[int]) -> list[Scenario]:
+  scenarios: list[Scenario] = []
+
+  for i in range(0, len(pices)):
+    current_pices = []
+    current_pices.append(pices[i])
+    append_scenario(pices, scenarios)
+
+    for j in range(0, len(pices)):
+      if i == j:
+        continue
+
+      current_pices.append(pices[j])
+      append_scenario(current_pices, scenarios)
+
+  return scenarios
 
 def main():
   resulting_scenarios: list[Scenario] = []
 
-  print(f'Required pices: {",".join(map(str, required_pices))}')
-  print(f'Accepted supplier lengths: {",".join(map(str, accepted_supplier_lengths))}')
+  print(f'Required pices: {required_pices} ({sum(required_pices)} total)')
+  print(f'Accepted supplier lengths: {accepted_supplier_lengths}')
   print(f'Cut width: {cut_width}')
   print()
 
   while len(required_pices) > 0:
-    scenarios: list[Scenario] = []
-
-    for i in range(0, len(required_pices)):
-      i_pice = required_pices[i]
-
-      pices = []
-      pices.append(i_pice)
-      append_scenario(pices, scenarios)
-
-      for j in range(0, len(required_pices)):
-        if i == j:
-          continue
-
-        j_pice = required_pices[j]
-        pices.append(j_pice)
-        append_scenario(pices, scenarios)
-
+    scenarios = generate_scenarios(required_pices)
     best_scenario = choose_best_scenario(scenarios)
 
     if best_scenario is None:
