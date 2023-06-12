@@ -11,17 +11,17 @@ sq60 = [
 ]
 
 '''
-Required pices: [510, 510, 300, 300, 220, 510, 510, 300, 300, 220] (3680 total)
+Required pices: [510, 510, 300, 300, 220, 650, 370, 650, 370, 290] (4170 total)
 Accepted supplier lengths: [500, 1000, 1500, 2000]
 Cut width: 3
 
-length=2000, waste=68, pices=[300, 510, 510, 300, 300]
-length=1500, waste=31, pices=[220, 220, 510, 510]
-length=500, waste=200, pices=[300]
+length=2000, waste=21, pices=[650, 510, 510, 300]
+length=500, waste=210, pices=[290]
+length=2000, waste=78, pices=[650, 300, 220, 370, 370]
 '''
 sq40 = [
   510, 510, 300, 300, 220,
-  510, 510, 300, 300, 220
+  650, 370, 650, 370, 290,
 ]
 
 '''
@@ -30,9 +30,8 @@ Accepted supplier lengths: [500, 1000, 1500, 2000]
 Cut width: 3
 
 length=2000, waste=77, pices=[960, 960]
-length=1000, waste=31, pices=[255, 255, 255, 195]
 length=2000, waste=8, pices=[255, 195, 440, 440, 650]
-length=1000, waste=350, pices=[650]
+length=2000, waste=378, pices=[255, 255, 255, 195, 650]
 '''
 sq30 = [
   960, 960, 255, 255, 195, 195,

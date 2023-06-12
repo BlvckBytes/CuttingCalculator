@@ -32,37 +32,21 @@ def append_scenario(pices: list[int], collection: list[Scenario]):
   scenario = (supplier_length, waste, pices.copy())
   collection.append(scenario)
 
-def calculate_score(scenario: Scenario) -> float:
-  '''
-  (length=1500, waste=31, pices=[220, 220, 510, 510])
-  (length=2000, waste=228, pices=[220, 220, 510, 510, 300])
-
-  TODO: Think about a way to give preference to groups with more members, to also
-  lessen the supplier cut count, as this change does not add waste, but reduces costs
-  '''
-
-  # The lesser the waste, the better the score
-  max_length = max(accepted_supplier_lengths)
-  scenario_waste = scenario[1]
-  waste_score = max_length - scenario_waste
-
-  return waste_score
-
 def choose_best_scenario(collection: list[Scenario]) -> Scenario | None:
-  max_score = None
-  max_score_id = None
+  min_waste = None
+  min_waste_id = None
 
   for i in range(0, len(collection)):
-    current_score = calculate_score(collection[i])
+    current_waste = collection[i][1]
 
-    if max_score is None or max_score < current_score:
-      max_score = current_score
-      max_score_id = i
+    if min_waste is None or min_waste > current_waste:
+      min_waste = current_waste
+      min_waste_id = i
 
-  if max_score_id is None:
+  if min_waste_id is None:
     return None
 
-  return collection[max_score_id]
+  return collection[min_waste_id]
 
 def generate_scenarios(pices: list[int]) -> list[Scenario]:
   scenarios: list[Scenario] = []
@@ -80,6 +64,44 @@ def generate_scenarios(pices: list[int]) -> list[Scenario]:
       append_scenario(current_pices, scenarios)
 
   return scenarios
+
+def try_combine_scenarios(collection: list[Scenario]) -> bool:
+  for i in range(0, len(collection)):
+    for j in range(0, len(collection)):
+      if i == j:
+        continue
+
+      a = collection[i]
+      b = collection[j]
+
+      pices_total = a[2].copy()
+      pices_total.extend(b[2])
+
+      scenario_buffer = []
+      append_scenario(pices_total, scenario_buffer)
+
+      result = scenario_buffer[0] if len(scenario_buffer) > 0 else None
+
+      if result is None:
+        continue
+
+      # The resulting waste has to be smaller than or equal to the sum of
+      # both a and b, in order to not make things worse
+      if result[2] > a[2] + b[2]:
+        continue
+
+      # The resulting supplier length should be strictly bigger than
+      # the previous length, as another pice has been added
+      if result[1] <= max(a[1], b[1]):
+        continue
+
+      # Combined successfully, remove both i and j and append the result
+      collection.remove(a)
+      collection.remove(b)
+      collection.append(result)
+      return True
+
+  return False
 
 def main():
   resulting_scenarios: list[Scenario] = []
@@ -106,6 +128,10 @@ def main():
       required_pices.remove(pice)
 
     resulting_scenarios.append(best_scenario)
+
+  while True:
+    if not try_combine_scenarios(resulting_scenarios):
+      break
 
   for scenario in resulting_scenarios:
     print(f'length={scenario[0]}, waste={scenario[1]}, pices={scenario[2]}')
