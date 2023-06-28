@@ -54,7 +54,7 @@ def generate_scenarios(pices: list[int]) -> list[Scenario]:
   for i in range(0, len(pices)):
     current_pices = []
     current_pices.append(pices[i])
-    append_scenario(pices, scenarios)
+    append_scenario(current_pices, scenarios)
 
     for j in range(0, len(pices)):
       if i == j:
